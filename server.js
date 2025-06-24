@@ -12,9 +12,9 @@ const io = socketIo(server, {
   }
 });
 
-// Store message history in memory (in production, use a database)
+// Store message history in memory
 let messageHistory = [];
-const MAX_MESSAGES = 100; // Limit stored messages
+const MAX_MESSAGES = 100;
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,9 +24,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Health check endpoint for Railway
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    activeConnections: io.engine.clientsCount
+  });
 });
 
 // Socket.IO connection handling
@@ -62,6 +66,8 @@ io.on('connection', (socket) => {
     
     // Broadcast message to all connected users
     io.emit('chat message', messageData);
+    
+    console.log(`Message from ${messageData.username}: ${messageData.message}`);
   });
   
   // Handle user typing indicator
@@ -85,7 +91,8 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📱 Socket.IO ready for connections`);
 });
